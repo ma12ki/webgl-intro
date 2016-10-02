@@ -25,37 +25,12 @@ function runWebGL() {
   function createShaderProgram() {
     program = gl.createProgram();
 
-    gl.attachShader(program, createVertexShader());
-    gl.attachShader(program, createFragmentShader());
+    gl.attachShader(program, getShader(gl, 'shader-vs'));
+    gl.attachShader(program, getShader(gl, 'shader-fs'));
     gl.linkProgram(program);
     gl.useProgram(program);
 
     return program;
-  }
-
-  function createVertexShader() {
-    const vs = `
-      attribute vec4 coords;
-      attribute float pointSize;
-      void main(void) {
-        gl_Position = coords; // xyzw
-        gl_PointSize = pointSize;
-      }
-    `;
-
-    return createShader(vs, gl.VERTEX_SHADER);
-  }
-
-  function createFragmentShader() {
-    const fs = `
-      precision mediump float;
-      uniform vec4 color;
-      void main(void) {
-        gl_FragColor = color; // rgba
-      }
-    `;
-
-    return createShader(fs, gl.FRAGMENT_SHADER);
   }
 
   function createShader(source, type) {
@@ -94,4 +69,44 @@ function runWebGL() {
     const color = gl.getUniformLocation(shaderProgram, 'color');
     gl.uniform4f(color, 1, 0, 1, 1);
   }
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+function getShader(gl, id, type) {
+  var shaderScript, theSource, currentChild, shader;
+  
+  shaderScript = document.getElementById(id);
+  
+  if (!shaderScript) {
+    return null;
+  }
+  
+  theSource = shaderScript.text;
+
+  if (!type) {
+    if (shaderScript.type == "x-shader/x-fragment") {
+      type = gl.FRAGMENT_SHADER;
+    } else if (shaderScript.type == "x-shader/x-vertex") {
+      type = gl.VERTEX_SHADER;
+    } else {
+      // Unknown shader type
+      return null;
+    }
+  }
+
+  shader = gl.createShader(type);
+
+  gl.shaderSource(shader, theSource);
+    
+  // Compile the shader program
+  gl.compileShader(shader);  
+    
+  // See if it compiled successfully
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {  
+      alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));  
+      gl.deleteShader(shader);
+      return null;
+  }
+    
+  return shader;
 }
