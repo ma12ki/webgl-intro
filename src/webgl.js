@@ -5,6 +5,10 @@ function runWebGL() {
   const gl = canvas.getContext('webgl');
   gl.viewport(0, 0, canvas.width, canvas.height);
 
+  let mouseX, mouseY;
+
+  trackMouseMovements();
+
   const shaderProgram = createShaderProgram();
   let vertices = [];
   let vertexCount = 5000;
@@ -12,14 +16,36 @@ function runWebGL() {
 
   draw();
 
+  function trackMouseMovements() {
+    document.addEventListener('mousemove', mapMouseEventToCoords);
+  }
+
+  function mapMouseEventToCoords(event) {
+    mouseX = mapDOMCoordsToWebGLCoords(event.clientX, 0, canvas.width, -1, 1);
+    mouseY = mapDOMCoordsToWebGLCoords(event.clientY, 0, canvas.height, 1, -1);
+  }
+
+  function mapDOMCoordsToWebGLCoords(value, minSrc, maxSrc, minDest, maxDest) {
+    return (value - minSrc) / (maxSrc - minSrc) * (maxDest - minDest) + minDest;
+  }
+
   function draw() {
     clear();
     // gl.drawArrays(gl.LINE_LOOP, 0 , 3);
     // gl.drawArrays(gl.TRIANGLES, 0 , 3);
 
     for (let i = 0; i < vertexCount * 2; i += 2) {
-      vertices[i] += Math.random() * 0.01 - 0.005;
-      vertices[i + 1] += Math.random() * 0.01 - 0.005;
+      const dx = vertices[i] - mouseX,
+            dy = vertices[i + 1] - mouseY,
+            dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 0.2) {
+        vertices[i] = mouseX + dx / dist * 0.2;
+        vertices[i + 1] = mouseY + dy / dist * 0.2;
+      } else {
+        vertices[i] += Math.random() * 0.01 - 0.005;
+        vertices[i + 1] += Math.random() * 0.01 - 0.005;
+      }
     }
 
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(vertices));
