@@ -3,8 +3,10 @@ window.onload = runWebGL;
 function runWebGL() {
   const canvas = document.getElementById('canvas');
   const gl = canvas.getContext('webgl');
-  const shaderProgram = createShaderProgram();
   gl.viewport(0, 0, canvas.width, canvas.height);
+
+  const shaderProgram = createShaderProgram();
+  createVertices();
 
   clear();
   draw();
@@ -31,9 +33,11 @@ function runWebGL() {
 
   function createVertexShader() {
     const vs = `
+      attribute vec4 coords;
+      attribute float pointSize;
       void main(void) {
-        gl_Position = vec4(0.0, 0.0, 0.0, 1.0); // xyzw
-        gl_PointSize = 10.0;
+        gl_Position = coords; // xyzw
+        gl_PointSize = pointSize;
       }
     `;
 
@@ -42,8 +46,10 @@ function runWebGL() {
 
   function createFragmentShader() {
     const fs = `
+      precision mediump float;
+      uniform vec4 color;
       void main(void) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // rgba
+        gl_FragColor = color; // rgba
       }
     `;
 
@@ -61,5 +67,16 @@ function runWebGL() {
     }
 
     return shader;
+  }
+
+  function createVertices() {
+    const coords = gl.getAttribLocation(shaderProgram, 'coords');
+    gl.vertexAttrib3f(coords, 0, 0, 0);
+
+    const pointSize = gl.getAttribLocation(shaderProgram, 'pointSize');
+    gl.vertexAttrib1f(pointSize, 33.33);
+
+    const color = gl.getUniformLocation(shaderProgram, 'color');
+    gl.uniform4f(color, 1, 0, 1, 1);
   }
 }
